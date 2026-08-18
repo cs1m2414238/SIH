@@ -4,7 +4,26 @@ A production-quality C++17 prototype implementing a Linux POSIX-socket NTRIP v2 
 
 ---
 
-## 1. End-to-End System Architecture (Mermaid AI Diagram)
+## 1. Problem Statement & Mission Overview
+
+* **Problem Statement Title**: Development of NTRIP (Network Transport of RTCM via internet protocol) Caster, NTRIP Client and Server on web or mobile platform.
+* **Technology Bucket**: Space Technology
+* **Category**: Software
+* **Core Objective**: High-reliability RTK correction reception from NTRIP Server/Caster, real-time transmission to clients, multi-constellation processing, tactical map visualization, and raw binary/telemetry time-tagged data logging.
+
+### Desired Outcomes & Implementation Matrix
+
+| Desired Outcome | Implementation in Prototype | Technical Details & Standards |
+| :--- | :--- | :--- |
+| **1. Web / Client App for NTRIP Transmission & Reception** | **POSIX C++17 NTRIP Client + RTKLIB Positioning Engine** + **React Web App** | • POSIX TCP Sockets (`socket`, `connect`, `send`, `recv`, `close`)<br>• HTTP/1.1 Basic Auth base64 streaming<br>• Sourcetable parsing (`STR;...` records)<br>• 100% Qualcomm CRC-24Q parity validation (`0x1864CFB`)<br>• RTK Carrier-Phase Double-Difference Integer Ambiguity Resolution (`FIX` / `FLOAT`) |
+| **2. Real-Time UI with Map Support** | **React Mission Control Dashboard & Tactical Kinematics Radar** | • Real-time Tactical Radar HUD with true track vector ($90.0^\circ\text{ East}$)<br>• Baseline distance vector dynamically measured from Base ARP (`BASE01`)<br>• GNSS Polar Skyplot with C/N0 SNR signal meters (GPS, GLONASS, Galileo, BeiDou)<br>• Standardized NMEA 0183 Serial Streamer (`$GNGGA`, `$GNRMC`, Fix Quality 4) |
+| **3. Time-Tagged Data Logging** | **Dual Binary Sink & JSON Telemetry Loggers** | • Raw byte stream written directly to `data/received.rtcm`<br>• Real-time ISO-8601 UTC time-tagged telemetry logs in `logs/`<br>• Bit-level RTCM frame inspector with MSM7 observation payload breakdown |
+
+---
+
+## 2. End-to-End System Architecture
+
+The overall system architecture bridges Space Segment GNSS satellite signals through ground base reference stations into our client pipeline and web visualization plane:
 
 ```mermaid
 graph TD
@@ -78,7 +97,18 @@ graph TD
 
 ---
 
-## 2. RTK Carrier-Phase Ambiguity Resolution AI / State Machine
+## 3. RTK Carrier-Phase Ambiguity Resolution State Machine
+
+Real-Time Kinematic (RTK) positioning uses carrier phase double-differencing equations between the reference base station and rover to eliminate satellite and receiver clock biases:
+
+$$\Delta\nabla \Phi = \Delta\nabla \rho + \lambda \Delta\nabla N + \epsilon_{\Phi}$$
+
+Where:
+* $\Delta\nabla \Phi$: Double-differenced carrier phase observable (in meters/cycles)
+* $\Delta\nabla \rho$: Geometric double-differenced distance vector
+* $\lambda$: Carrier wavelength ($L_1 \approx 19.03\text{ cm}$)
+* $\Delta\nabla N$: Integer cycle ambiguity vector
+* $\epsilon_{\Phi}$: Multipath and thermal receiver measurement noise
 
 ```mermaid
 stateDiagram-v2
@@ -89,7 +119,10 @@ stateDiagram-v2
         InitSockets: Initialize POSIX TCP Sockets
         QuerySourcetable: Query Caster (GET / HTTP/1.1)
         SelectMountpoint: Select Best Baseline Mountpoint (/BASE01)
-        LoadConfig --> InitSockets --> QuerySourcetable --> SelectMountpoint
+        
+        LoadConfig --> InitSockets
+        InitSockets --> QuerySourcetable
+        QuerySourcetable --> SelectMountpoint
     }
 
     Initialization --> SingleAutonomous: No Differential Corrections (Single GPS)
@@ -112,7 +145,7 @@ stateDiagram-v2
     
     state RtkFloat {
         EKFUpdate: Extended Kalman Filter (Float Ambiguities)
-        FloatResiduals: Compute Double-Differenced Residuals (Δ∇Φ)
+        FloatResiduals: Compute Double-Differenced Residuals
         AccuracyFloat: Horizontal Accuracy ~ 0.18 meters (18 cm)
         NmeaQuality5: NMEA Fix Quality = 5
     }
@@ -131,7 +164,6 @@ stateDiagram-v2
         FixedInteger: Carrier Phase Integer Ambiguity Fixed
         SubCentimeter: Horizontal Accuracy ~ 0.018 meters (1.8 cm)
         NmeaQuality4: NMEA Fix Quality = 4 (RTK Fixed)
-        GlowingHUD: Green Sub-Centimeter Beacon Active
     }
 
     RtkFix --> RtkFloat: Cycle Slip / High DOP / Sat Drop (<8 sats)
@@ -141,7 +173,9 @@ stateDiagram-v2
 
 ---
 
-## 3. Multi-Threaded POSIX Pipeline Architecture
+## 4. Multi-Threaded POSIX Pipeline Architecture
+
+The C++ core implements a clean multi-threaded pipeline with atomic statistics and thread-safe data structures:
 
 ```mermaid
 graph LR
@@ -196,7 +230,7 @@ graph LR
 
 ---
 
-## 4. NTRIP v2 Protocol Handshake & Qualcomm CRC-24Q Validation Sequence
+## 5. NTRIP v2 Protocol Handshake & Qualcomm CRC-24Q Validation
 
 ```mermaid
 sequenceDiagram
@@ -232,9 +266,21 @@ sequenceDiagram
     end
 ```
 
+### RTCM 3.x Binary Frame Structure
+Each RTCM 3.x frame conforms to the Radio Technical Commission for Maritime Services standard:
+
+| Byte Offset | Field Name | Size | Description |
+| :--- | :--- | :--- | :--- |
+| `0` | **Preamble** | 8 bits | Always constant `0xD3` (`11010011b`) |
+| `1` (bits 7-6) | **Reserved** | 6 bits | Reserved bits (`000000b`) |
+| `1-2` (bits 5-0, 7-0) | **Payload Length** | 10 bits | Byte length $N$ of variable payload ($0 \le N \le 1023$) |
+| `3-4` (bits 7-0, 7-4) | **Message Number** | 12 bits | RTCM Message ID (e.g. 1005, 1077, 1087, 1127) |
+| `3` to `3+N-1` | **Payload** | $N$ bytes | Observation matrices / station antenna coordinates |
+| `3+N` to `3+N+2` | **CRC-24Q** | 24 bits | Qualcomm CRC-24Q parity code (Generator polynomial `0x1864CFB`) |
+
 ---
 
-## 5. Dual-Mode Operating Architecture (MODE 1 vs MODE 2)
+## 6. Dual-Mode Operating Architecture (MODE 1 vs MODE 2)
 
 ```mermaid
 graph TD
@@ -281,18 +327,64 @@ graph TD
 
 ---
 
-## 6. Build and Verification Instructions
+## 7. Time-Tagged Telemetry Schema
 
-### C++ POSIX Linux Build (WSL2):
+The C++ module serializes real-time ISO-8601 UTC time-tagged telemetry snapshots formatted for downstream REST/FastAPI endpoints:
+
+```json
+{
+  "client_id": "ROVER01",
+  "rover_id": "ROVER01",
+  "mountpoint": "/BASE01",
+  "connected": true,
+
+  "mode": "RTK",
+  "rtk_solution": "FIX",
+  "ar_ratio": 4.24,
+  "age_of_diff_s": 0.8,
+  "accuracy_h_m": 0.018,
+  "accuracy_v_m": 0.031,
+  "baseline_m": 24.8,
+  "num_satellites": 17,
+
+  "latitude": 26.44992314,
+  "longitude": 80.33194271,
+  "altitude": 126.42,
+  "speed": 2.50,
+  "heading": 90.0,
+
+  "bytes_received": 48200,
+  "rtcm_frames": 240,
+  "crc_failures": 0,
+
+  "stream_health": "HEALTHY",
+  "last_rtcm_utc": "2026-08-18T20:05:00Z"
+}
+```
+
+---
+
+## 8. Build, Test, and Execution Guide
+
+### Prerequisites (Ubuntu Linux / WSL2)
+```bash
+sudo apt update && sudo apt install -y build-essential cmake g++ libpthread-stubs0-dev
+```
+
+### 1. Build and Run Unit Tests (`CTest`)
 ```bash
 mkdir -p build && cd build
 cmake ..
 make -j4
 ctest --output-on-failure
+```
+
+### 2. Run C++ NTRIP Client + RTK Engine
+```bash
 ./ntrip_rover_client ../config/client_config.json
 ```
 
-### React Mission Control Dashboard:
+### 3. Launch React Mission Control Center
 ```bash
 cd frontend
 npm install
