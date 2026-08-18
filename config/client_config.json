@@ -1,0 +1,14 @@
+{
+  "caster_host": "127.0.0.1",
+  "caster_port": 2101,
+  "username": "rover1",
+  "password": "roverpass",
+  "preferred_mountpoint": "/BASE01",
+  "client_id": "ROVER01",
+  "rover_id": "ROVER01",
+  "reconnect_seconds": 5,
+  "stream_timeout_seconds": 10,
+  "output_rtcm_file": "data/received.rtcm",
+  "operating_mode": "RTK",
+  "rtk_engine": "RTKLIB"
+}

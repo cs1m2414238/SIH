@@ -1,0 +1,8 @@
+/mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build/CMakeFiles/ntrip_rover_client.dir
+/mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build/CMakeFiles/test_sourcetable.dir
+/mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build/CMakeFiles/test_rtcm_parser.dir
+/mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build/CMakeFiles/test_config.dir
+/mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build/CMakeFiles/test_rtk_engine.dir
+/mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build/CMakeFiles/test.dir
+/mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build/CMakeFiles/edit_cache.dir
+/mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build/CMakeFiles/rebuild_cache.dir

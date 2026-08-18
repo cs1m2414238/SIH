@@ -1,0 +1,88 @@
+Start testing: Aug 18 18:31 UTC
+----------------------------------------------------------
+1/4 Testing: TestSourcetable
+1/4 Test: TestSourcetable
+Command: "/mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build/test_sourcetable"
+Directory: /mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build
+"TestSourcetable" start time: Aug 18 18:31 UTC
+Output:
+----------------------------------------------------------
+Running SourcetableParser Tests...
+[PASS] testBasicSourcetableParsing
+[PASS] testEmptyAndMalformedSourcetable
+All SourcetableParser tests passed successfully!
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"TestSourcetable" end time: Aug 18 18:31 UTC
+"TestSourcetable" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/4 Testing: TestRtcmParser
+2/4 Test: TestRtcmParser
+Command: "/mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build/test_rtcm_parser"
+Directory: /mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build
+"TestRtcmParser" start time: Aug 18 18:31 UTC
+Output:
+----------------------------------------------------------
+Running RtcmParser & CRC-24Q Tests...
+[PASS] testValidSingleFrame
+[PASS] testFrameSplitAcrossMultipleBuffers
+[PASS] testMultipleFramesInOneBuffer
+[PASS] testGarbageBeforePreamble
+[PASS] testInvalidCrcResynchronization
+All RtcmParser tests passed successfully!
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"TestRtcmParser" end time: Aug 18 18:31 UTC
+"TestRtcmParser" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/4 Testing: TestConfig
+3/4 Test: TestConfig
+Command: "/mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build/test_config"
+Directory: /mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build
+"TestConfig" start time: Aug 18 18:31 UTC
+Output:
+----------------------------------------------------------
+Running Config Tests...
+[PASS] testConfigDefaultValues
+[Config] Validation error: 'caster_host' must not be empty.
+[Config] Validation error: 'caster_port' must be greater than 0.
+[Config] Validation error: 'reconnect_seconds' must be at least 1.
+[Config] Validation error: 'output_rtcm_file' must not be empty.
+[PASS] testConfigValidation
+[PASS] testConfigLoading
+All Config tests passed successfully!
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"TestConfig" end time: Aug 18 18:31 UTC
+"TestConfig" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/4 Testing: TestRtkEngine
+4/4 Test: TestRtkEngine
+Command: "/mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build/test_rtk_engine"
+Directory: /mnt/c/Users/Priyanshu Sharma/Desktop/SIH ME/build
+"TestRtkEngine" start time: Aug 18 18:31 UTC
+Output:
+----------------------------------------------------------
+Running RTK Engine Unit Tests...
+[PASS] test_initial_state
+[PASS] test_mode_switching
+[PASS] test_feed_rtcm_and_solution_update
+All RTK Engine tests passed successfully!
+<end of output>
+Test time =   2.07 sec
+----------------------------------------------------------
+Test Passed.
+"TestRtkEngine" end time: Aug 18 18:31 UTC
+"TestRtkEngine" time elapsed: 00:00:02
+----------------------------------------------------------
+
+End testing: Aug 18 18:31 UTC
