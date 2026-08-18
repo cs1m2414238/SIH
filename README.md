@@ -241,27 +241,27 @@ sequenceDiagram
     participant UI as 🖥️ Mission Control Web App
 
     Note over Rover, Caster: Phase 1: Sourcetable Discovery
-    Rover->>Caster: TCP connect(127.0.0.1, 2101)
-    Rover->>Caster: GET / HTTP/1.1\r\nUser-Agent: NTRIP SIH1520Client/1.0\r\nAccept: */*\r\n\r\n
-    Caster-->>Rover: SOURCETABLE 200 OK\r\nSTR;... /BASE01;... /BASE02;...\r\nENDSOURCETABLE
-    Rover->>Rover: Parse STR records & Select best baseline mountpoint (/BASE01)
+    Rover->>Caster: "TCP connect(127.0.0.1, 2101)"
+    Rover->>Caster: "GET / HTTP/1.1 (Query Sourcetable)"
+    Caster-->>Rover: "SOURCETABLE 200 OK (List of STR Mountpoints)"
+    Rover->>Rover: "Parse STR records & Select best baseline (/BASE01)"
 
     Note over Rover, Caster: Phase 2: Stream Authentication & Correction Reception
-    Rover->>Caster: GET /BASE01 HTTP/1.1\r\nAuthorization: Basic cm92ZXIxOnJvdmVycGFzcw==\r\nNtrip-Version: Ntrip/2.0\r\n\r\n
-    Caster-->>Rover: HTTP/1.1 200 OK\r\nContent-Type: gnss/data\r\n\r\n<Raw RTCM Binary Stream>
+    Rover->>Caster: "GET /BASE01 HTTP/1.1 with Basic Auth (NTRIP v2.0)"
+    Caster-->>Rover: "HTTP/1.1 200 OK (Content-Type: gnss/data)"
 
     Note over Rover, Solver: Phase 3: RTCM 3.x Parsing & Parity Verification
     loop Every Incoming Packet
-        Rover->>Rover: Scan for 0xD3 Preamble & Extract 10-bit Payload Length (N)
-        Rover->>Rover: Compute Qualcomm CRC-24Q over (3 + N) bytes (Poly: 0x1864CFB)
+        Rover->>Rover: "Scan 0xD3 Preamble & Extract 10-bit Payload Length (N)"
+        Rover->>Rover: "Compute Qualcomm CRC-24Q over (3 + N) bytes (Poly: 0x1864CFB)"
         alt CRC-24Q Matches Expected
-            Rover->>Solver: Feed RTCM Frame (Type 1005 ARP / 1077 GPS MSM7 / 1087 GLO MSM7)
-            Solver->>Solver: Solve Double-Difference Residuals & Resolve Integer Ambiguities
-            Solver->>UI: Emit RTK FIX Solution (Acc: 0.018m, Ratio: 4.2, Lat/Lon: 8 decimals)
-            UI->>UI: Update Tactical Radar & Stream NMEA $GNGGA (Fix Quality 4)
+            Rover->>Solver: "Feed Verified Frame (Type 1005 / 1077 / 1087)"
+            Solver->>Solver: "Double-Difference Phase Residuals & Ambiguity Resolution"
+            Solver->>UI: "Emit RTK FIX Solution (Acc: 0.018m, Ratio: 4.2)"
+            UI->>UI: "Update Tactical Radar & Stream NMEA $GNGGA (Fix Quality 4)"
         else CRC-24Q Mismatch
-            Rover->>Rover: Discard corrupted byte, shift buffer +1, search next 0xD3
-            Rover->>UI: Log CRC Parity Error & Trigger Resynchronization Alert
+            Rover->>Rover: "Discard byte, shift buffer +1, search next 0xD3"
+            Rover->>UI: "Log CRC Error & Resynchronize Stream"
         end
     end
 ```
